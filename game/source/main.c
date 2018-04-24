@@ -1,42 +1,64 @@
-#define USHORT unsigned short
-#define u8 unsigned short
 
-#include "my_tiles.h" /* 64x32 pixel pcx, converted by pcx2gba */
-#include "my_map.h" /* 512x512 tile map, exported by the map editor */
+#include "OpenEngine.h"
+#include "OpenGraphics.h"
+#include "OpenInput.h"
+
+#include "my_tiles.h"
+#include "my_map.h"
 
 int main(void) {
 
-   int tile_setCharBaseBlock = 1;
-   int my_mapScreenBaseBlock = 28;
-   int i;
+	int tile_setCharBaseBlock = 1;
+	int my_mapScreenBaseBlock = 28;
+	int i;
+	bool pause = false;
+	vector2 bg_pos;
 
-/* 
-Initialize the display */
-*(unsigned short*)0x04000000 = 0x0 | 0x400;
+	setmode(DCNT_MODE0, DCNT_BG2);
 
-/* Load the palette */
-unsigned short *tilePalette = (unsigned short*)0x05000000;
-for(i = 0; i < 256; i++) {
-      tilePalette[i] = my_tilespal[i];
-}
+	unsigned short *tilePalette = PALETTEBUFFER;
+	for(i = 0; i < 256; i++) {
+		tilePalette[i] = my_tilespal[i];
+	}
 
-/* Load the tiles */
-unsigned short *tileData = 
-  (unsigned short*)( 0x06000000 + (tile_setCharBaseBlock * 0x4000) ); 
-for(i = 0; i < (my_tiles_WIDTH * my_tiles_HEIGHT) / 2; i++) { 
-   tileData[i] = my_tilesdata[i]; 
-}
+	unsigned short *tileData = (unsigned short*)( SCREENBUFFER + (tile_setCharBaseBlock * 0x4000) ); 
+	loadmem(tileData, my_tilesdata, (my_tiles_WIDTH * my_tiles_HEIGHT));
 
-/* Load the map */
-unsigned short *tileMap =
-  (unsigned short*) ( 0x6000000 + (my_mapScreenBaseBlock*0x800) ); 
-unsigned short *myMapData = (unsigned short*)my_map;
-for(i = 0; i < (64 * 64) / 2; i++) {
-     tileMap[i] = myMapData[i];
-}
+	unsigned short *tileMap = (unsigned short*) ( SCREENBUFFER + (my_mapScreenBaseBlock*0x800) ); 
+	unsigned short *myMapData = (unsigned short*)my_map;
+	loadmem(tileMap, myMapData, (64 * 64));
 
-/* Load the map into BG2 */
-*(unsigned short*)0x400000C = (tile_setCharBaseBlock << 2)
-   | (my_mapScreenBaseBlock << 8) | 0x80 | 0x8000;
-
+	REG_BG2CNT = (tile_setCharBaseBlock << 2) | (my_mapScreenBaseBlock << 8) | 0x80 | 0x8000;
+	
+    while(1)
+    {
+        vsync();
+        key_poll();
+		
+		if (getKeyState(KEY_START)) {
+			if (pause) {
+				pause = false;
+			} else if (!(pause)) {
+				pause = true;
+			}
+		}
+		
+		if (!(pause)) {
+			bg_pos.x += key_tri_h();
+			bg_pos.y += key_tri_v();
+	
+			REG_BG2HOFS = bg_pos.x;
+			REG_BG2VOFS = bg_pos.y;
+		} else {
+			if (getKeyState(KEY_A)) {
+				SaveMemory[0x0000] = REG_BG2HOFS;
+				SaveMemory[0x0002] = REG_BG2VOFS;
+			} else if (getKeyState(KEY_B)) {
+				bg_pos.x = SaveMemory[0x0000];
+				bg_pos.y = SaveMemory[0x0002];
+				REG_BG2HOFS = bg_pos.x;
+				REG_BG2VOFS = bg_pos.y;
+			}
+		}
+	}
 }

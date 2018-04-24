@@ -5,7 +5,11 @@
 
 //definimos regiones, modos y valores
 
-#define SCREENBUFFER ((volatile u16*)0x06000000)
+#define GAMEPAK_RAM ((volatile uint8_t*)0x0E000000)
+
+unsigned short *SaveMemory[0xFFFF] = GAMEPAK_RAM;
+
+#define SCREENBUFFER ((volatile u8*)0x06000000)
 
 #define IO 0x04000000
 
@@ -14,6 +18,8 @@
 #define SCREEN_W 240
 
 #define SCREEN_H 160
+
+#define PALETTEBUFFER ((volatile u8*)0x05000000)
 
 
 #define REG_KEYINPUT (* (volatile unsigned short*) 0x4000130)
@@ -32,6 +38,8 @@
 #define KEY_MASK     0xFC00
 
 //gran trozo de codigo proveniente de las librerias de tonc
+
+
 
 #define REG_BG0CNT			*(vu16*)(IO+0x0008)	// bg 0-3 control
 #define REG_BG1CNT			*(vu16*)(IO+0x000A)
@@ -176,7 +184,6 @@ box boxcreator(vector2 box1, vector2 box1d) {
 }
 
 bool box2d_col(vector2 box1, vector2 box2, vector2 box1d, vector2 box2d) {
-	box1.y += 10;
 	box box1b = boxcreator(box1, box1d);
 	box box2b = boxcreator(box2, box2d);
 	if ((box2b.B.x < box1b.A.x) || (box2b.A.x > box1b.B.x)) {
@@ -185,6 +192,12 @@ bool box2d_col(vector2 box1, vector2 box2, vector2 box1d, vector2 box2d) {
 		return true;
 	} else {
 		return false;
+	}
+}
+
+void loadmem(volatile unsigned short* reg[], unsigned short* data[], int length) {
+	for(int i = 0; i < (length) / 2; i++) {
+		reg[i] = data[i];
 	}
 }
 
