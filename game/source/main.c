@@ -35,7 +35,7 @@ int main(void) {
         vsync();
         key_poll();
 		
-		if (getKeyState(KEY_START)) {
+		if (wasKeyPressed(KEY_START)) {
 			if (pause) {
 				pause = false;
 			} else if (!(pause)) {
@@ -51,11 +51,11 @@ int main(void) {
 			REG_BG2VOFS = bg_pos.y;
 		} else {
 			if (getKeyState(KEY_A)) {
-				SaveMemory[0x0000] = REG_BG2HOFS;
-				SaveMemory[0x0002] = REG_BG2VOFS;
+				SaveMemory[0] = bg_pos.x;
+				SaveMemory[2] = bg_pos.y;
 			} else if (getKeyState(KEY_B)) {
-				bg_pos.x = SaveMemory[0x0000];
-				bg_pos.y = SaveMemory[0x0002];
+				bg_pos.x = SaveMemory[0];
+				bg_pos.y = SaveMemory[2];
 				REG_BG2HOFS = bg_pos.x;
 				REG_BG2VOFS = bg_pos.y;
 			}

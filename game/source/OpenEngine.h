@@ -5,9 +5,7 @@
 
 //definimos regiones, modos y valores
 
-#define GAMEPAK_RAM ((volatile uint8_t*)0x0E000000)
-
-unsigned short *SaveMemory[0xFFFF] = GAMEPAK_RAM;
+unsigned short *SaveMemory = ((volatile uint8_t*)0x0E000000);
 
 #define SCREENBUFFER ((volatile u8*)0x06000000)
 
